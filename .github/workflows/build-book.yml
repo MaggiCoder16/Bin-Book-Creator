@@ -20,7 +20,7 @@ jobs:
       run: pip install chess
 
     - name: Build .bin from PGN
-      run: python build_book.py
+      run: python create_polyglot.py
 
     - name: Move bin to engines/
       run: |
