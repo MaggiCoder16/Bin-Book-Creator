@@ -1,0 +1,43 @@
+name: Build .bin Book
+
+on:
+  workflow_dispatch:
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Install Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install python-chess
+      run: pip install chess
+
+    - name: Build .bin from PGN
+      run: python build_book.py
+
+    - name: Move bin to engines/
+      run: |
+        mkdir -p engines
+        mv filtered_960_bots_2200plus.bin engines/
+
+    - name: Commit and push .bin file
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      run: |
+        git config user.name "github-actions"
+        git config user.email "actions@github.com"
+        git pull origin ${{ github.ref_name }} --rebase
+        git add engines/filtered_960_bots_2200plus.bin
+        if git diff --cached --quiet; then
+          echo "No changes in book."
+        else
+          git commit -m "Update opening book .bin"
+          git push https://${{ env.GH_TOKEN }}@github.com/${{ github.repository }} HEAD:${{ github.ref_name }}
+        fi
